@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive map of documented European captive origins and captivity locations in the Mediterranean.">
+  <title>European Captives Map — Version 1.2</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#records-heading">Skip to records</a>
+  <header class="site-header">
+    <div>
+      <h1>European Captives</h1>
+      <p class="subtitle">Documented origins, captivity locations, and source-backed associations</p>
+    </div>
+    <nav class="download-nav" aria-label="Project actions">
+      <button id="help-button" class="header-button" type="button">How to use this map</button>
+      <a href="data/european-captives-complete.csv" download>Download complete dataset (CSV)</a>
+    </nav>
+  </header>
+
+  <main class="app-shell">
+    <aside class="sidebar" aria-label="Map controls and records">
+      <section class="controls" aria-labelledby="filter-heading">
+        <div class="section-heading-row">
+          <div>
+            <p class="eyebrow">Explore the evidence</p>
+            <h2 id="filter-heading">Filters</h2>
+          </div>
+          <button id="reset-filters" class="text-button" type="button">Reset Filters</button>
+        </div>
+
+        <label class="field-label" for="record-search">Search all records</label>
+        <input id="record-search" type="search" placeholder="Name, place, source, date, or record ID" autocomplete="off">
+        <p class="field-help search-help">Search includes records that have no mappable location.</p>
+
+        <fieldset class="year-filter">
+          <legend>Year range</legend>
+          <div class="year-readout"><output id="min-year-output">—</output><span>to</span><output id="max-year-output">—</output></div>
+          <div class="range-stack" aria-label="Choose a minimum and maximum year">
+            <input id="min-year" type="range" aria-label="Minimum year">
+            <input id="max-year" type="range" aria-label="Maximum year">
+          </div>
+        </fieldset>
+
+        <fieldset class="map-filter">
+          <legend>Shown on the map</legend>
+          <div class="map-filter-options">
+            <label><input type="radio" name="map-mode" value="both" checked><span>Both</span></label>
+            <label><input type="radio" name="map-mode" value="origin"><span class="legend-dot origin"></span><span>Origins</span></label>
+            <label><input type="radio" name="map-mode" value="captivity"><span class="legend-dot captivity"></span><span>Captivity</span></label>
+            <label><input type="radio" name="map-mode" value="no-location"><span>No Location Data</span></label>
+          </div>
+          <label class="connection-option"><input id="show-connections" type="checkbox" checked><span class="legend-line"></span> Documented connections</label>
+        </fieldset>
+
+        <div id="selection-chip" class="selection-chip" hidden>
+          <span id="selection-label"></span>
+          <button id="clear-selection" type="button" aria-label="Clear map selection">×</button>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-label="Filtered summary">
+        <div><strong id="stat-records">—</strong><span>matching records</span></div>
+        <div><strong id="stat-locations">—</strong><span>mapped locations</span></div>
+        <div><strong id="stat-connections">—</strong><span>connected records</span></div>
+        <div><strong id="stat-unmapped">—</strong><span>without a mapped point</span></div>
+      </section>
+
+      <section class="records-section" aria-labelledby="records-heading">
+        <div class="section-heading-row compact">
+          <h2 id="records-heading">Records</h2>
+          <span id="record-count" aria-live="polite"></span>
+        </div>
+        <p id="record-limit-note" class="field-help"></p>
+        <div id="record-list" class="record-list" tabindex="-1"></div>
+      </section>
+    </aside>
+
+    <section class="map-region" aria-label="Interactive map">
+      <div id="map" role="application" aria-label="Map of European captive origins and captivity locations"></div>
+      <div class="map-legend" aria-label="Map legend">
+        <strong>Map key</strong>
+        <span><i class="legend-dot origin"></i> Origin</span>
+        <span><i class="legend-dot captivity"></i> Captivity</span>
+        <span><i class="legend-line"></i> Association, not route</span>
+      </div>
+      <div id="loading" class="loading-card" role="status">Loading historical records…</div>
+      <div id="map-error" class="error-card" hidden></div>
+    </section>
+  </main>
+
+  <aside id="detail-panel" class="detail-panel" aria-labelledby="detail-title" aria-hidden="true">
+    <button id="close-detail" class="detail-close" type="button" aria-label="Close record details">×</button>
+    <p class="eyebrow">Historical record</p>
+    <h2 id="detail-title">Record details</h2>
+    <div id="detail-content"></div>
+  </aside>
+
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
+    <div class="help-header">
+      <div>
+        <p class="eyebrow">Quick guide</p>
+        <h2 id="help-title">How to use this map</h2>
+      </div>
+      <button id="close-help" class="detail-close help-close" type="button" aria-label="Close guide">×</button>
+    </div>
+    <div class="guide-grid">
+      <section><strong>1. Find a record</strong><p>Use the search box for a name, place, source, date, or record ID. Unmapped records remain searchable.</p></section>
+      <section><strong>2. Choose locations</strong><p>Select Both, Origins, Captivity, or No Location Data. The last option keeps the map visible without markers and lists records with neither a documented origin nor a documented captivity location.</p></section>
+      <section><strong>3. Narrow the dates</strong><p>Move the two year controls to focus on a historical period.</p></section>
+      <section><strong>4. Read the evidence</strong><p>Click a marker to narrow the list, then select a name to open its concise historical record.</p></section>
+    </div>
+    <div class="guide-note"><strong>Remember:</strong> connection lines indicate documented associations, not reconstructed travel routes. Unknown locations are never placed at an artificial point.</div>
+    <button id="finish-help" class="guide-finish" type="button">Start exploring</button>
+  </dialog>
+
+  <footer>
+    <p><strong>Interpretive caution:</strong> markers represent documented associations with places. Lines connect a recorded origin and captivity location; they do not reconstruct a journey or route. Concentrations reflect the surviving documentary sample.</p>
+    <p>Every source row remains searchable. Records with unknown locations appear in the list without an invented marker. The basemap is © OpenStreetMap contributors and requires no API key.</p>
+  </footer>
+
+  <noscript><p class="noscript">This interactive map requires JavaScript. The complete dataset is still available from the CSV download.</p></noscript>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

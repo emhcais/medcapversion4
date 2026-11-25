@@ -1,0 +1,22 @@
+{
+  "title": "European Captives Map Version 1.2",
+  "generated_from": "BC Project Captivity Complete Location Date.csv",
+  "source_rows": 3137,
+  "records": 3137,
+  "minimum_year": 1563,
+  "maximum_year": 1748,
+  "mappable_locations": 79,
+  "geography_counts": {
+    "neither": 735,
+    "origin_only": 77,
+    "captivity_only": 1401,
+    "both": 924
+  },
+  "records_without_documented_location": 733,
+  "strait_placeholder_records_removed": 812,
+  "method_note": "Unknown locations are excluded from the map but retained in search and the complete CSV.",
+  "records_with_mapped_origin": 1001,
+  "records_with_mapped_captivity": 2325,
+  "records_with_both_mapped": 924,
+  "generated_utc": "2026-11-25T18:37:29Z"
+}
